@@ -20,6 +20,13 @@ client = MongoClient(MONGODB_URI)
 db = client.get_database("cryptodash")
 bitcoin_collection = db["bitcoin_data"]
 
+def get_last_predicted_price():
+    last_record = bitcoin_collection.find_one(sort=[("timestamp", -1)])  # Trouver le dernier document
+    if last_record and "predicted_next_price" in last_record:
+        return last_record["predicted_next_price"]
+    return None
+
+
 def fetch_and_store_bitcoin_data():
     try:
         # Requête à l'API CoinCap

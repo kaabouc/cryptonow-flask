@@ -2,18 +2,20 @@ from flask import Flask, jsonify
 from flask_restful import Api, Resource
 from dotenv import load_dotenv
 from pymongo import MongoClient
+from flask_socketio import SocketIO
 import schedule
 import os
 import threading
 import time
-from fetch_data import fetch_and_store_bitcoin_data, get_all_bitcoin_data
-from task_detail import regenerate_model, stop_requests, recreate_bitcoin_data
+from fetch_data import fetch_and_store_bitcoin_data, get_all_bitcoin_data , get_last_predicted_price
+from task_detail import regenerate_model, stop_requests, recreate_bitcoin_data 
 
 # Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
 api = Api(app)
+socketio = SocketIO(app, cors_allowed_origins="*")  # Activer les connexions cross-origin
 
 # MongoDB connection
 MONGODB_URI = os.getenv("MONGODB_URI")
@@ -33,6 +35,25 @@ class BitcoinDataAPI(Resource):
 
 # Add the resource to the API
 api.add_resource(BitcoinDataAPI, "/api/bitcoin-data")
+
+
+def start_real_time_fetching():
+    while True:
+        try:
+            # Récupérer les nouvelles données et les stocker
+            fetch_and_store_bitcoin_data()
+
+            # Obtenir la dernière valeur prédite
+            last_price = get_last_predicted_price()
+
+            # Envoyer la dernière prédiction au frontend
+            if last_price is not None:
+                socketio.emit("update_price", {"predicted_price": last_price})
+                print(f"Valeur prédite envoyée : {last_price}")
+        except Exception as e:
+            print(f"Erreur : {e}")
+
+        time.sleep(10)  # Récupérer les données toutes les 10 secondes
 
 
 # Periodically fetch Bitcoin data
@@ -58,10 +79,11 @@ def schedule_tasks():
 
 if __name__ == "__main__":
     # Start the data fetching thread
-    threading.Thread(target=start_fetching, daemon=True).start()
+    # threading.Thread(target=start_fetching, daemon=True).start()
 
     # Start the task scheduler thread
-    
+    threading.Thread(target=start_real_time_fetching, daemon=True).start()
+
     # threading.Thread(target=schedule_tasks, daemon=True).start()
 
     # Run the Flask application
