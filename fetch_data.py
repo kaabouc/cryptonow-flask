@@ -100,8 +100,9 @@ def export_to_excel(data):
         df = pd.DataFrame(data)
 
         # Define the filename
-        filename = f"bitcoin_data_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.xlsx"
-        
+        # filename = f"bitcoin_data_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.xlsx"
+        filename = "bitcoin_data.xlsx"
+
         # Save the DataFrame to Excel
         df.to_excel(filename, index=False, engine='openpyxl')
         print(f"Data exported to {filename}")

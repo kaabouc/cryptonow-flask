@@ -32,7 +32,7 @@ class BitcoinDataAPI(Resource):
             return jsonify({"error": str(e)}), 500
 
 # Add the resource to the API
-api.add_resource(BitcoinDataAPI, "/api/all-bitcoin-data")
+api.add_resource(BitcoinDataAPI, "/api/bitcoin-data")
 
 
 # Periodically fetch Bitcoin data
@@ -51,17 +51,18 @@ def daily_tasks():
 
 # Schedule daily tasks at 11:00
 def schedule_tasks():
-    schedule.every().day.at("01:05").do(daily_tasks)
+    schedule.every().day.at("02:09").do(daily_tasks)
     while True:
         schedule.run_pending()
         time.sleep(1)
 
 if __name__ == "__main__":
     # Start the data fetching thread
-    # threading.Thread(target=start_fetching, daemon=True).start()
+    threading.Thread(target=start_fetching, daemon=True).start()
 
     # Start the task scheduler thread
-    threading.Thread(target=schedule_tasks, daemon=True).start()
+    
+    # threading.Thread(target=schedule_tasks, daemon=True).start()
 
     # Run the Flask application
     app.run(debug=True)
