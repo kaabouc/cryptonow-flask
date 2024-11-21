@@ -94,6 +94,8 @@ def get_all_bitcoin_data():
 def export_to_excel(data):
     """Export Bitcoin data to an Excel file."""
     try:
+        # data = list(bitcoin_collection.find({}, {"_id": 0}))  # Exclure le champ `_id`
+
         # Convert the data into a pandas DataFrame
         df = pd.DataFrame(data)
 

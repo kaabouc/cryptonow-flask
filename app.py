@@ -2,10 +2,12 @@ from flask import Flask, jsonify
 from flask_restful import Api, Resource
 from dotenv import load_dotenv
 from pymongo import MongoClient
+import schedule
 import os
 import threading
 import time
-from fetch_data import fetch_and_store_bitcoin_data , get_all_bitcoin_data
+from fetch_data import fetch_and_store_bitcoin_data, get_all_bitcoin_data
+from task_detail import regenerate_model, stop_requests, recreate_bitcoin_data
 
 # Load environment variables
 load_dotenv()
@@ -30,7 +32,8 @@ class BitcoinDataAPI(Resource):
             return jsonify({"error": str(e)}), 500
 
 # Add the resource to the API
-api.add_resource(BitcoinDataAPI, "/api/bitcoin-data")
+api.add_resource(BitcoinDataAPI, "/api/all-bitcoin-data")
+
 
 # Periodically fetch Bitcoin data
 def start_fetching():
@@ -38,11 +41,27 @@ def start_fetching():
         fetch_and_store_bitcoin_data()
         time.sleep(10)  # Fetch data every 10 seconds
 
+# Function for daily tasks
+def daily_tasks():
+    print("Starting daily tasks...")
+    stop_requests()              # Stopper les requêtes
+    recreate_bitcoin_data()      # Recréer le fichier bitcoin_data.xlsx
+    regenerate_model()           # Regénérer le modèle logistic_regression_model.pkl
+    print("Daily tasks completed!")
 
-
+# Schedule daily tasks at 11:00
+def schedule_tasks():
+    schedule.every().day.at("01:05").do(daily_tasks)
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
 
 if __name__ == "__main__":
     # Start the data fetching thread
-    threading.Thread(target=start_fetching, daemon=True).start()
+    # threading.Thread(target=start_fetching, daemon=True).start()
+
+    # Start the task scheduler thread
+    threading.Thread(target=schedule_tasks, daemon=True).start()
+
     # Run the Flask application
     app.run(debug=True)
