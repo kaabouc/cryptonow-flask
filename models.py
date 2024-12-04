@@ -11,6 +11,7 @@ class BitcoinData(db.Model):
     change_percent_24hr = db.Column(db.Float, nullable=False)
     volume_usd_24hr = db.Column(db.Float, nullable=False)
     vwap_24hr = db.Column(db.Float, nullable=False)
+    sentiment = db.Column(db.Float, nullable=False)
     explorer = db.Column(db.String, nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 

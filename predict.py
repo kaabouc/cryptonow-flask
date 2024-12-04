@@ -65,7 +65,7 @@ try:
     # Obtenir le prix précédent
     previous_price = get_previous_price()
     if previous_price is None:
-        previous_price = 43000  # Valeur par défaut si aucun prix n'est trouvé
+        previous_price = 93000  # Valeur par défaut si aucun prix n'est trouvé
 
     # Récupérer les données actuelles
     current_price, bitcoin_data = fetch_bitcoin_data()

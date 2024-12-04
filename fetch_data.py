@@ -6,6 +6,8 @@ from datetime import datetime
 import pandas as pd
 from predict import calculate_growth_rate, predict_next_value, fetch_bitcoin_data, load_model
 import numpy as np
+import json
+
 # Charger les variables d'environnement
 load_dotenv()
 
@@ -29,6 +31,8 @@ def get_last_predicted_price():
 
 def fetch_and_store_bitcoin_data():
     try:
+        with open("./sentiment/sentiment_values.json", "r") as file:
+            sentiment_values = json.load(file)
         # Requête à l'API CoinCap
         response = requests.get(COINCAP_API_URL)
         response.raise_for_status()
@@ -72,10 +76,12 @@ def fetch_and_store_bitcoin_data():
             "explorer": data["explorer"],
             "growth_rate": growth_rate,
             "predicted_next_price": predicted_next_price,
+            "sentiment": sentiment_values["positive_percentage"]*100/(sentiment_values["positive_percentage"]+sentiment_values["negative_percentage"]),
             "timestamp": datetime.utcnow()
         }
 
         # Insertion dans MongoDB
+        print(document)
         bitcoin_collection.insert_one(document)
         print("Données récupérées et enregistrées avec succès !")
         print(f"Taux de croissance : {growth_rate:.2f}%")
