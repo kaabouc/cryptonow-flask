@@ -9,6 +9,7 @@ import threading
 import time
 from fetch_data import fetch_and_store_bitcoin_data, get_all_bitcoin_data , get_last_predicted_price
 from task_detail import regenerate_model, stop_requests, recreate_bitcoin_data 
+from chat.chat import get_bitcoin_data, calculate_sentiment, generate_analysis
 
 # Load environment variables
 load_dotenv()
@@ -22,6 +23,7 @@ MONGODB_URI = os.getenv("MONGODB_URI")
 client = MongoClient(MONGODB_URI)
 db = client.get_database("cryptodash")
 bitcoin_collection = db["bitcoin_data"]
+latest_prediction = {"chat_prediction": None}
 
 # API to fetch stored Bitcoin data
 class BitcoinDataAPI(Resource):
@@ -40,6 +42,19 @@ api.add_resource(BitcoinDataAPI, "/api/bitcoin-data")
 def start_real_time_fetching():
     while True:
         try:
+            # Step 1: Fetch Bitcoin data
+            bitcoin_data = get_bitcoin_data()
+
+            # Step 2: Calculate sentiment
+            sentiment_score = calculate_sentiment()
+
+            # Step 3: Generate analysis with AI
+            ai_analysis = generate_analysis(bitcoin_data, sentiment_score)
+
+            # Step 4: Update the latest prediction
+            latest_prediction["chat_prediction"] = ai_analysis
+            socketio.emit("update_price", {"chat_prediction": ai_analysis})
+            print(f"Latest Prediction: {ai_analysis}")
             # Récupérer les nouvelles données et les stocker
             fetch_and_store_bitcoin_data()
 
@@ -75,7 +90,7 @@ def schedule_tasks():
     schedule.every().day.at("02:09").do(daily_tasks)
     while True:
         schedule.run_pending()
-        time.sleep(1)
+        time.sleep(10)
 
 if __name__ == "__main__":
     # Start the data fetching thread
