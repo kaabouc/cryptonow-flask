@@ -16,7 +16,7 @@ load_dotenv()
 
 app = Flask(__name__)
 api = Api(app)
-socketio = SocketIO(app, cors_allowed_origins="*")  # Activer les connexions cross-origin
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
 
 # MongoDB connection
 MONGODB_URI = os.getenv("MONGODB_URI")
